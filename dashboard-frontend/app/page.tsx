@@ -341,66 +341,84 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
   return (
     <div style={styles.container}>
       <header style={styles.header}>
-        <h1 style={styles.title}>Users Dashboard</h1>
+        <div>
+          <h1 style={styles.title}>Users Dashboard</h1>
+          <p style={styles.subtitle}>Manage and analyze your user base</p>
+        </div>
         {stats && (
           <div style={styles.kpiContainer}>
             <div style={styles.kpiCard}>
-              <span style={styles.kpiLabel}>Active Users</span>
-              <span style={styles.kpiValue}>{stats.active_rows.toLocaleString()}</span>
+              <div style={styles.kpiIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <div>
+                <span style={styles.kpiLabel}>Active Users</span>
+                <span style={styles.kpiValue}>{stats.active_rows.toLocaleString()}</span>
+              </div>
             </div>
-            <div style={styles.kpiCard}>
-              <span style={styles.kpiLabel}>Total Users</span>
-              <span style={styles.kpiValue}>{stats.total_rows.toLocaleString()}</span>
+            <div style={{...styles.kpiCard, borderLeft: "4px solid #10b981"}}>
+              <div style={{...styles.kpiIcon, color: "#10b981"}}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="19" y1="8" x2="19" y2="14"></line>
+                  <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+              </div>
+              <div>
+                <span style={styles.kpiLabel}>Total Users</span>
+                <span style={styles.kpiValue}>{stats.total_rows.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         )}
       </header>
 
       <div style={styles.filterSection}>
-        {/* <label style={styles.label}>Filter by Source:</label>
-        <select
-          style={styles.select}
-          value={selectedSource}
-          onChange={(e) => handleSourceChange(e.target.value)}
-        >
-          <option value="ALL">All Sources</option>
-          {filters.map((s, i) => (
-            <option key={i} value={s.source}>{s.source}</option>
-          ))}
-        </select> */}
-        <button
-          onClick={exportCSV}
-          style={{
-            padding: "8px 20px",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "#22c55e",
-            color: "#fff",
-            cursor: "pointer",
-            fontWeight: 600,
-            marginLeft: 10
-          }}
-        >
-          Export
-        </button>
-      <button 
-        style={styles.pageBtn} 
-        onClick={() => setShowFilterModal(true)}
-      >
-        Filter
-      </button>
+        <div style={styles.filterLeft}>
+        </div>
+        <div style={styles.filterRight}>
+          <button onClick={exportCSV} style={styles.exportBtn}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: 8}}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export CSV
+          </button>
+          <button style={styles.filterBtn} onClick={() => setShowFilterModal(true)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: 8}}>
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            Filters
+            {Object.keys(selectedFilters).length > 0 && (
+              <span style={styles.filterBadge}>{Object.keys(selectedFilters).length}</span>
+            )}
+          </button>
+        </div>
       </div>
 
       <main style={styles.main}>
         {isLoading ? (
           <div style={styles.centerContent}>
             <div className="spinner"></div>
-            <p style={{ color: "#3b82f6", marginTop: 10 }}>Loading data...</p>
+            <p style={styles.loadingText}>Loading data...</p>
           </div>
         ) : users.length === 0 ? (
           <div style={styles.centerContent}>
             <div style={styles.emptyState}>
-              <h3>No users found</h3>
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5" style={{marginBottom: 20}}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <h3 style={styles.emptyTitle}>No users found</h3>
+              <p style={styles.emptyText}>Try adjusting your filters or search criteria</p>
             </div>
           </div>
         ) : (
@@ -409,7 +427,6 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
               <table style={styles.table}>
                 <thead>
                   <tr style={styles.tableHeaderRow}>
-                    
                     <th style={styles.th}>Address</th>
                     <th style={styles.th}>Web3 ID</th>
                     <th style={styles.th}>Wallet USD Value</th>
@@ -440,37 +457,79 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                 </thead>
                 <tbody>
                   {currentRows.map((u, i) => (
-                    <tr key={i} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
-                      <td style={styles.tdAddress}>{u.address}</td>
-                      <td style={styles.td}>{u.web3_id}</td>
-                      <td style={styles.td}>${parseFloat(u.wallet_usd_value).toLocaleString()}</td>
+                    <tr key={i} style={styles.tr} className="table-row">
+                      <td style={styles.tdAddress}>
+                        <div style={styles.addressCell}>
+                          <div style={styles.addressAvatar}>
+                            {u.address.slice(2, 4).toUpperCase()}
+                          </div>
+                          <span>{u.address.slice(0, 6)}...{u.address.slice(-4)}</span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>{u.web3_id || '—'}</td>
+                      <td style={styles.tdMoney}>${parseFloat(u.wallet_usd_value).toLocaleString()}</td>
                       <td style={styles.td}>{u.tvf}</td>
-                      <td style={styles.td}>{u.replied_rate}%</td>
-                      <td style={styles.td}>{u.follower_count}</td>
-                      <td style={styles.td}>{u.following_count}</td>
-                      <td style={styles.td}>{u.twitter_id}</td>
-                      <td style={styles.td}>{u.twitter_verified ? "Yes" : "No"}</td>
-                      <td style={styles.td}>{u.telegram_id}</td>
-                      <td style={styles.td}>{u.discord_id}</td>
-                      <td style={styles.td}>{u.is_vip ? "Yes" : "No"}</td>
-                      <td style={styles.td}>{new Date(u.rank_at).toLocaleDateString()}</td>
+                      <td style={styles.td}>
+                        <div style={styles.percentBar}>
+                          <div style={{...styles.percentFill, width: `${u.replied_rate}%`}}></div>
+                          <span style={styles.percentText}>{u.replied_rate}%</span>
+                        </div>
+                      </td>
+                      <td style={styles.td}>{u.follower_count.toLocaleString()}</td>
+                      <td style={styles.td}>{u.following_count.toLocaleString()}</td>
+                      <td style={styles.td}>{u.twitter_id || '—'}</td>
+                      <td style={styles.td}>
+                        {u.twitter_verified ? (
+                          <span style={styles.verifiedBadge}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Yes
+                          </span>
+                        ) : (
+                          <span style={styles.unverifiedBadge}>No</span>
+                        )}
+                      </td>
+                      <td style={styles.td}>{u.telegram_id || '—'}</td>
+                      <td style={styles.td}>{u.discord_id || '—'}</td>
+                      <td style={styles.td}>
+                        {u.is_vip ? (
+                          <span style={styles.vipBadge}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style={{marginRight: 4}}>
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            VIP
+                          </span>
+                        ) : (
+                          <span style={styles.regularBadge}>Regular</span>
+                        )}
+                      </td>
+                      <td style={styles.tdDate}>{new Date(u.rank_at).toLocaleDateString()}</td>
                       <td style={styles.td}>{u.rank_score}</td>
-                      <td style={styles.td}>${parseFloat(u.offer_price).toLocaleString()}</td>
-                      <td style={styles.td}>${parseFloat(u.initial_price).toLocaleString()}</td>
+                      <td style={styles.tdMoney}>${parseFloat(u.offer_price).toLocaleString()}</td>
+                      <td style={styles.tdMoney}>${parseFloat(u.initial_price).toLocaleString()}</td>
                       <td style={styles.td}>{u.trust_count}</td>
-                      <td style={styles.td}>${parseFloat(u.reward).toLocaleString()}</td>
+                      <td style={styles.tdMoney}>${parseFloat(u.reward).toLocaleString()}</td>
                       <td style={styles.td}>{u.active_vip_days}</td>
                       <td style={styles.td}>{u.uncharged_offer_count}</td>
-                      <td style={styles.td}>${parseFloat(u.uncharged_offer_value).toLocaleString()}</td>
-                      <td style={styles.td}>{u.unread_message_count}</td>
-                      <td style={styles.td}>{u.source}</td>
+                      <td style={styles.tdMoney}>${parseFloat(u.uncharged_offer_value).toLocaleString()}</td>
+                      <td style={styles.td}>
+                        {u.unread_message_count > 0 ? (
+                          <span style={styles.unreadBadge}>{u.unread_message_count}</span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td style={styles.td}>
+                        <span style={styles.sourceBadge}>{u.source}</span>
+                      </td>
                       <td style={styles.td}>
                         <span style={u.contacted ? styles.tagYes : styles.tagNo}>
                           {u.contacted ? "Yes" : "No"}
                         </span>
                       </td>
-                      <td style={styles.td}>{u.contacted_at ? new Date(u.contacted_at).toLocaleDateString() : "N/A"}</td>
-                      <td style={styles.td}>{new Date(u.created_at).toLocaleDateString()}</td>
+                      <td style={styles.tdDate}>{u.contacted_at ? new Date(u.contacted_at).toLocaleDateString() : "—"}</td>
+                      <td style={styles.tdDate}>{new Date(u.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -478,21 +537,54 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
             </div>
 
             <div style={styles.pagination}>
-              <button 
-                style={page === 1 ? styles.pageBtnDisabled : styles.pageBtn} 
-                disabled={page === 1} 
-                onClick={() => setPage(page - 1)}
-              >
-                Previous
-              </button>
-              <span style={styles.pageInfo}>Page {page} of {totalPages || 1}</span>
-              <button 
-                style={page === totalPages ? styles.pageBtnDisabled : styles.pageBtn} 
-                disabled={page === totalPages || totalPages === 0} 
-                onClick={() => setPage(page + 1)}
-              >
-                Next
-              </button>
+              <div style={styles.paginationInfo}>
+                Showing <strong>{start + 1}</strong> to <strong>{Math.min(start + PAGE_SIZE, users.length)}</strong> of <strong>{users.length}</strong> results
+              </div>
+              <div style={styles.paginationControls}>
+                <button 
+                  style={page === 1 ? styles.pageBtnDisabled : styles.pageBtn} 
+                  disabled={page === 1} 
+                  onClick={() => setPage(page - 1)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                  Previous
+                </button>
+                <div style={styles.pageNumbers}>
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={i}
+                        style={page === pageNum ? styles.pageNumActive : styles.pageNum}
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button 
+                  style={page === totalPages ? styles.pageBtnDisabled : styles.pageBtn} 
+                  disabled={page === totalPages || totalPages === 0} 
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
             </div>
           </>
         )}
@@ -500,31 +592,40 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
           <div style={styles.modalOverlay}>
             <div style={styles.modal}>
               <div style={styles.modalHeader}>
-                <h1 style={{ marginLeft: 10, fontSize: 20, fontWeight: 700 }}>Filters</h1>
-                <button style={styles.pageBtn3} onClick={() => setShowFilterModal(false)}><img src={x.src} alt="Close" width="12" height="12" /></button>
+                <div>
+                  <h2 style={styles.modalTitle}>Filter Users</h2>
+                </div>
+                <button style={styles.closeBtn} onClick={() => setShowFilterModal(false)}>
+                  <img src={x.src} alt="Close" width="16" height="16" />
+                </button>
               </div>
               <div style={styles.columns}>
                 {/* LEFT: columns */}
                 <div style={styles.modalLeft}>
+                  <div style={styles.filterListHeader}>Filter Categories</div>
                   {filterColumns.map((col) => (
                     <div
                       key={col}
                       className="filter-column-item"
                       style={{
-                        padding: 10,
+                        padding: "12px 16px",
                         cursor: "pointer",
-                        background: activeColumn === col ? "#e0f2fe" : "transparent"
+                        background: activeColumn === col ? "#eff6ff" : "transparent",
+                        borderLeft: activeColumn === col ? "3px solid #3b82f6" : "3px solid transparent",
+                        transition: "all 0.2s ease",
+                        fontSize: "14px",
+                        fontWeight: activeColumn === col ? 600 : 400,
+                        color: activeColumn === col ? "#1e40af" : "#475569"
                       }}
                       onClick={() => setActiveColumn(col)}
                     >
-                      {col}
+                      {col.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </div>
                   ))}
                 </div>
 
                 {/* RIGHT: values */}
                 <div style={styles.modalRight}>
-
                   {activeColumn && (() => {
                     const minKey = `${activeColumn}_min`;
                     const maxKey = `${activeColumn}_max`;
@@ -539,31 +640,34 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                       // If no valid ranges, show message
                       if (ranges.length === 0) {
                         return (
-                          <div style={{ padding: 20, color: '#666', textAlign: 'center' }}>
-                            No data available
+                          <div style={styles.noData}>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5">
+                              <circle cx="12" cy="12" r="10"></circle>
+                              <line x1="12" y1="8" x2="12" y2="12"></line>
+                              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p>No data available</p>
                           </div>
                         );
                       }
 
                       return (
-                        <div style={{ maxHeight: 400 }}>
+                        <div style={styles.filterOptionsContainer}>
+                          <div style={styles.filterOptionsHeader}>
+                            Select range{ranges.length > 1 ? 's' : ''}
+                          </div>
                           {ranges.map((r, i) => {
                             const selected = selectedFilters?.[`${activeColumn}_range`] || [];
 
                             return (
                               <label 
                                 key={i} 
-                                style={{ 
-                                  display: "flex",
-                                  alignItems: "center",
-                                  padding: "10px 16px",
-                                  cursor: "pointer",
-                                  borderBottom: "1px solid #f0f0f0"
-                                }}
+                                style={styles.checkboxLabel}
+                                className="checkbox-label"
                               >
                                 <input
                                   type="checkbox"
-                                  style={{ marginRight: 10, cursor: "pointer" }}
+                                  style={styles.checkbox}
                                   checked={selected.some((x: any) => x.min === r.min && x.max === r.max)}
                                   onChange={(e) => {
                                     const prev = selectedFilters?.[`${activeColumn}_range`] || [];
@@ -578,7 +682,7 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                                     });
                                   }}
                                 />
-                                <span>{r.label}</span>
+                                <span style={styles.checkboxText}>{r.label}</span>
                               </label>
                             );
                           })}
@@ -600,28 +704,31 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                     
                     if (uniqueValues.length === 0) {
                       return (
-                        <div style={{ padding: 20, color: '#666', textAlign: 'center' }}>
-                          No data available
+                        <div style={styles.noData}>
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>
+                          <p>No data available</p>
                         </div>
                       );
                     }
                     
                     return (
-                      <div style={{ maxHeight: 400}}>
+                      <div style={styles.filterOptionsContainer}>
+                        <div style={styles.filterOptionsHeader}>
+                          Select value{uniqueValues.length > 1 ? 's' : ''}
+                        </div>
                         {uniqueValues.map((val: any) => (
                           <label 
                             key={String(val)} 
-                            style={{ 
-                              display: "flex",
-                              alignItems: "center",
-                              padding: "10px 16px",
-                              cursor: "pointer",
-                              borderBottom: "1px solid #f0f0f0"
-                            }}
+                            style={styles.checkboxLabel}
+                            className="checkbox-label"
                           >
                             <input
                               type="checkbox"
-                              style={{ marginRight: 10, cursor: "pointer" }}
+                              style={styles.checkbox}
                               checked={!!selectedFilters[activeColumn]?.includes(val)}
                               onChange={(e) => {
                                 const prev = selectedFilters?.[activeColumn] || [];
@@ -635,26 +742,26 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                                 });
                               }}
                             />
-                            <span>{String(val)}</span>
+                            <span style={styles.checkboxText}>{String(val)}</span>
                           </label>
                         ))}
                       </div>
                     );
                   })()}
-          </div>
+                </div>
               </div>
               {/* footer */}
               <div style={styles.modalFooter}>
                 <button
-                  style={styles.pageBtn2}
+                  style={styles.clearBtn}
                   onClick={() => {
                     setSelectedFilters({});
                   }}
                 >
-                  Clear
+                  Clear All
                 </button>
                 <button
-                  style={styles.pageBtn}
+                  style={styles.applyBtn}
                   onClick={() => {
                     loadUsersWithFilters(normalizeFilters(selectedFilters));
                     setShowFilterModal(false);
@@ -671,12 +778,12 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
 
       <style jsx>{`
         .spinner {
-          border: 4px solid #f3f3f3;
+          border: 4px solid #e0e7ff;
           border-top: 4px solid #3b82f6;
           border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
+          width: 48px;
+          height: 48px;
+          animation: spin 0.8s linear infinite;
         }
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -684,15 +791,42 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
         }
       `}</style>
       <style>{`
-      button:hover {
-        filter: brightness(0.7);
-        transition: filter 0.2s;
-      }
+        button:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transition: all 0.2s ease;
+        }
 
-      .filter-column-item:hover {
-        background-color: #f0f9ff !important; 
-      }
-    `}</style>
+        button:active:not(:disabled) {
+          transform: translateY(0);
+        }
+
+        .filter-column-item:hover {
+          background-color: #f0f9ff !important; 
+        }
+
+        .table-row:hover {
+          background-color: #f8fafc !important;
+          transition: background-color 0.15s ease;
+        }
+
+        .checkbox-label:hover {
+          background-color: #f8fafc !important;
+        }
+
+        input[type="checkbox"] {
+          cursor: pointer;
+          width: 18px;
+          height: 18px;
+          accent-color: #3b82f6;
+        }
+
+        input[type="text"]:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+      `}</style>
     </div>
   );
 }
@@ -701,8 +835,8 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     maxWidth: "100%",
     margin: "0 auto",
-    padding: "50px",
-    fontFamily: "'Inter', system-ui, sans-serif",
+    padding: "40px 60px",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
     color: "#1e293b",
@@ -710,111 +844,581 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "30px",
+    alignItems: "flex-start",
+    marginBottom: "40px",
     flexWrap: "wrap",
+    gap: "30px",
+  },
+  title: { 
+    fontSize: "2.5rem", 
+    fontWeight: 800, 
+    color: "#0f172a", 
+    margin: 0,
+    letterSpacing: "-0.02em",
+    background: "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+  subtitle: {
+    fontSize: "1rem",
+    color: "#64748b",
+    margin: "8px 0 0 0",
+    fontWeight: 400,
+  },
+  kpiContainer: { 
+    display: "flex", 
     gap: "20px",
   },
-  title: { fontSize: "2rem", fontWeight: 700, color: "#1e3a8a", margin: 0 },
-  kpiContainer: { display: "flex", gap: "15px" },
   kpiCard: {
     backgroundColor: "#fff",
-    padding: "15px 25px",
-    borderRadius: "12px",
-    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    padding: "24px 28px",
+    borderRadius: "16px",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 24px rgba(0, 0, 0, 0.05)",
     borderLeft: "4px solid #3b82f6",
     display: "flex",
-    flexDirection: "column",
-  },
-  kpiLabel: { fontSize: "0.875rem", color: "#64748b", fontWeight: 500 },
-  kpiValue: { fontSize: "1.25rem", fontWeight: 700, color: "#1e40af" },
-  filterSection: {
-    marginBottom: "25px",
-    display: "flex",
+    gap: "16px",
     alignItems: "center",
-  justifyContent: "flex-end",
-    gap: "12px",
+    minWidth: "200px",
+    transition: "all 0.3s ease",
   },
-  label: { fontWeight: 600, color: "#475569" },
-  select: {
-    padding: "8px 16px",
-    borderRadius: "8px",
-    border: "1px solid #cbd5e1",
-    backgroundColor: "#fff",
-    cursor: "pointer",
-    fontSize: "1rem",
-  },
-  main: {
-    backgroundColor: "#fff",
-    borderRadius: "16px",
-    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-    overflow: "hidden",
-    minHeight: "400px",
-    display: "flex",
-    flexDirection: "column",
-  },
-  tableWrapper: { overflowX: "auto" },
-  table: { width: "100%", borderCollapse: "collapse", textAlign: "left" },
-  tableHeaderRow: { backgroundColor: "#eff6ff" },
-  th: { padding: "16px", color: "#1e40af", fontWeight: 600, borderBottom: "2px solid #dbeafe" },
-  td: { padding: "14px 16px", borderBottom: "1px solid #f1f5f9" },
-  tdAddress: { 
-    padding: "14px 16px", 
-    borderBottom: "1px solid #f1f5f9", 
-    fontFamily: "monospace", 
-    color: "#475569",
-    fontSize: "0.9rem" 
-    },
-  modalOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.4)",
+  kpiIcon: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "12px",
+    backgroundColor: "#eff6ff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 50
+    color: "#3b82f6",
+  },
+  kpiLabel: { 
+    fontSize: "0.875rem", 
+    color: "#64748b", 
+    fontWeight: 500,
+    display: "block",
+    marginBottom: "4px",
+  },
+  kpiValue: { 
+    fontSize: "1.75rem", 
+    fontWeight: 700, 
+    color: "#0f172a",
+    display: "block",
+  },
+  filterSection: {
+    marginBottom: "30px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "20px",
+  },
+  filterLeft: {
+    flex: 1,
+  },
+  filterRight: {
+    display: "flex",
+    gap: "12px",
+  },
+  searchContainer: {
+    position: "relative",
+    maxWidth: "400px",
+  },
+  searchIcon: {
+    position: "absolute",
+    left: "16px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#94a3b8",
+    pointerEvents: "none",
+  },
+  searchInput: {
+    width: "100%",
+    padding: "12px 16px 12px 44px",
+    borderRadius: "12px",
+    border: "2px solid #e2e8f0",
+    backgroundColor: "#fff",
+    fontSize: "0.95rem",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  exportBtn: {
+    padding: "12px 24px",
+    borderRadius: "12px",
+    border: "2px solid #10b981",
+    backgroundColor: "#fff",
+    color: "#10b981",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  filterBtn: {
+    padding: "12px 24px",
+    borderRadius: "12px",
+    border: "none",
+    backgroundColor: "#3b82f6",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    display: "flex",
+    alignItems: "center",
+    position: "relative",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  filterBadge: {
+    position: "absolute",
+    top: "-8px",
+    right: "-8px",
+    backgroundColor: "#ef4444",
+    color: "#fff",
+    borderRadius: "50%",
+    width: "24px",
+    height: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    border: "2px solid #fff",
+  },
+  main: {
+    backgroundColor: "#fff",
+    borderRadius: "20px",
+    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05), 0 20px 40px rgba(0, 0, 0, 0.05)",
+    overflow: "hidden",
+    minHeight: "500px",
+    display: "flex",
+    flexDirection: "column",
+  },
+  tableWrapper: { 
+    overflowX: "auto",
+    flex: 1,
+  },
+  table: { 
+    width: "100%", 
+    borderCollapse: "collapse", 
+    textAlign: "left",
+  },
+  tableHeaderRow: { 
+    backgroundColor: "#f8fafc",
+    borderBottom: "2px solid #e2e8f0",
+  },
+  th: { 
+    padding: "18px 20px", 
+    color: "#475569", 
+    fontWeight: 700, 
+    fontSize: "0.85rem",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    whiteSpace: "nowrap",
+  },
+  td: { 
+    padding: "18px 20px", 
+    borderBottom: "1px solid #f1f5f9",
+    fontSize: "0.95rem",
+    color: "#334155",
+  },
+  tdAddress: { 
+    padding: "18px 20px", 
+    borderBottom: "1px solid #f1f5f9",
+  },
+  addressCell: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  addressAvatar: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "8px",
+    backgroundColor: "#eff6ff",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    color: "#3b82f6",
+  },
+  tdMoney: {
+    padding: "18px 20px", 
+    borderBottom: "1px solid #f1f5f9",
+    fontWeight: 600,
+    color: "#0f172a",
+    fontVariantNumeric: "tabular-nums",
+  },
+  tdDate: {
+    padding: "18px 20px", 
+    borderBottom: "1px solid #f1f5f9",
+    color: "#64748b",
+    fontSize: "0.9rem",
+  },
+  percentBar: {
+    position: "relative",
+    width: "100px",
+    height: "24px",
+    backgroundColor: "#f1f5f9",
+    borderRadius: "6px",
+    overflow: "hidden",
+  },
+  percentFill: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    height: "100%",
+    backgroundColor: "#3b82f6",
+    transition: "width 0.3s ease",
+  },
+  percentText: {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    transform: "translate(-50%, -50%)",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+    color: "#0f172a",
+    zIndex: 1,
+  },
+  verifiedBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4px",
+    backgroundColor: "#dbeafe",
+    color: "#1e40af",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  unverifiedBadge: {
+    display: "inline-block",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  vipBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    backgroundColor: "#fef3c7",
+    color: "#92400e",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  regularBadge: {
+    display: "inline-block",
+    backgroundColor: "#f1f5f9",
+    color: "#64748b",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  unreadBadge: {
+    display: "inline-block",
+    backgroundColor: "#fee2e2",
+    color: "#991b1b",
+    padding: "6px 10px",
+    borderRadius: "6px",
+    fontSize: "0.8rem",
+    fontWeight: 700,
+    minWidth: "28px",
+    textAlign: "center",
+  },
+  sourceBadge: {
+    display: "inline-block",
+    backgroundColor: "#ede9fe",
+    color: "#6b21a8",
+    padding: "6px 12px",
+    borderRadius: "8px",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0, 0, 0, 0.5)",
+    backdropFilter: "blur(4px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 50,
+    animation: "fadeIn 0.2s ease",
   },
   modal: {
     background: "#fff",
-    width: "800px",
-    height: "500px",
-    padding: "15px",
-    borderRadius: 12,
+    width: "900px",
+    maxWidth: "90vw",
+    height: "600px",
+    maxHeight: "85vh",
+    borderRadius: "20px",
     display: "flex",
     flexDirection: "column",
-    overflow: "hidden"
+    overflow: "hidden",
+    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+    animation: "slideUp 0.3s ease",
   },
-   modalHeader: {
+  modalHeader: {
     display: "flex",
     justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: "28px 32px",
+    borderBottom: "2px solid #f1f5f9",
   },
-  columns: { display: "flex", flex: 1, overflowY: "auto" },
+  modalTitle: {
+    fontSize: "1.5rem",
+    fontWeight: 700,
+    color: "#0f172a",
+    margin: 0,
+  },
+  modalSubtitle: {
+    fontSize: "0.9rem",
+    color: "#64748b",
+    margin: "4px 0 0 0",
+  },
+  closeBtn: {
+    padding: "10px",
+    cursor: "pointer",
+    backgroundColor: "#f8fafc",
+    border: "none",
+    borderRadius: "10px",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  columns: { 
+    display: "flex", 
+    flex: 1, 
+    overflow: "hidden",
+  },
   modalLeft: {
-    width: "30%",
-    borderRight: "1px solid #eee",
-    overflowY: "auto"
+    width: "35%",
+    borderRight: "2px solid #f1f5f9",
+    overflowY: "auto",
+    backgroundColor: "#fafbfc",
+  },
+  filterListHeader: {
+    padding: "16px",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    color: "#94a3b8",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    borderBottom: "1px solid #e2e8f0",
   },
   modalRight: {
     flex: 1,
-    padding: 20,
-    overflowY: "auto"
+    overflowY: "auto",
+    backgroundColor: "#fff",
+  },
+  filterOptionsContainer: {
+    padding: "20px",
+  },
+  filterOptionsHeader: {
+    fontSize: "0.875rem",
+    fontWeight: 600,
+    color: "#475569",
+    marginBottom: "16px",
+    paddingBottom: "12px",
+    borderBottom: "2px solid #f1f5f9",
+  },
+  checkboxLabel: {
+    display: "flex",
+    alignItems: "center",
+    padding: "14px 16px",
+    cursor: "pointer",
+    borderRadius: "10px",
+    marginBottom: "6px",
+    transition: "all 0.15s ease",
+  },
+  checkbox: {
+    marginRight: "12px",
+  },
+  checkboxText: {
+    fontSize: "0.95rem",
+    color: "#334155",
+    fontWeight: 500,
+  },
+  noData: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "60px 20px",
+    color: "#94a3b8",
+    textAlign: "center",
   },
   modalFooter: {
-    padding: 15,
-    borderTop: "1px solid #eee",
+    padding: "20px 32px",
+    borderTop: "2px solid #f1f5f9",
     display: "flex",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    backgroundColor: "#fafbfc",
   },
-  trEven: { backgroundColor: "#fff" },
-  trOdd: { backgroundColor: "#f8fafc" },
-  tagYes: { backgroundColor: "#dcfce7", color: "#166534", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 600 },
-  tagNo: { backgroundColor: "#fee2e2", color: "#991b1b", padding: "4px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: 600 },
-  centerContent: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, padding: "50px" },
-  emptyState: { textAlign: "center", color: "#94a3b8" },
-  pagination: { padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", gap: "20px", borderTop: "1px solid #f1f5f9" },
-  pageBtn: { padding: "8px 20px", borderRadius: "8px", border: "none", backgroundColor: "#3b82f6", color: "#fff", cursor: "pointer", fontWeight: 500 },
-  pageBtn2: { padding: "8px 20px", marginLeft: "10px", borderRadius: "8px", border: "none", backgroundColor: "#94a3b8", color: "#fff", cursor: "pointer", fontWeight: 500 },
-  pageBtn3: { padding: "8px 8px", cursor: "pointer",backgroundColor: "#fff", border: "none", borderRadius: "50%" },
-  pageBtnDisabled: { padding: "8px 20px", borderRadius: "8px", border: "none", backgroundColor: "#e2e8f0", color: "#94a3b8", cursor: "not-allowed" },
-  pageInfo: { fontWeight: 500, color: "#64748b" },
+  clearBtn: {
+    padding: "12px 24px",
+    borderRadius: "12px",
+    border: "2px solid #e2e8f0",
+    backgroundColor: "#fff",
+    color: "#64748b",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  applyBtn: {
+    padding: "12px 32px",
+    borderRadius: "12px",
+    border: "none",
+    backgroundColor: "#3b82f6",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  tr: { 
+    transition: "background-color 0.15s ease",
+  },
+  tagYes: { 
+    backgroundColor: "#dcfce7", 
+    color: "#166534", 
+    padding: "6px 12px", 
+    borderRadius: "8px", 
+    fontSize: "0.8rem", 
+    fontWeight: 600,
+    display: "inline-block",
+  },
+  tagNo: { 
+    backgroundColor: "#fee2e2", 
+    color: "#991b1b", 
+    padding: "6px 12px", 
+    borderRadius: "8px", 
+    fontSize: "0.8rem", 
+    fontWeight: 600,
+    display: "inline-block",
+  },
+  centerContent: { 
+    display: "flex", 
+    flexDirection: "column", 
+    alignItems: "center", 
+    justifyContent: "center", 
+    flex: 1, 
+    padding: "80px",
+  },
+  loadingText: {
+    color: "#3b82f6",
+    marginTop: "16px",
+    fontSize: "1rem",
+    fontWeight: 500,
+  },
+  emptyState: { 
+    textAlign: "center",
+    maxWidth: "400px",
+  },
+  emptyTitle: {
+    fontSize: "1.5rem",
+    fontWeight: 700,
+    color: "#0f172a",
+    marginBottom: "8px",
+  },
+  emptyText: {
+    color: "#64748b",
+    fontSize: "1rem",
+  },
+  pagination: { 
+    padding: "28px 32px", 
+    display: "flex", 
+    justifyContent: "space-between", 
+    alignItems: "center",
+    borderTop: "2px solid #f1f5f9",
+    backgroundColor: "#fafbfc",
+  },
+  paginationInfo: {
+    fontSize: "0.95rem",
+    color: "#64748b",
+  },
+  paginationControls: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
+  pageBtn: { 
+    padding: "10px 20px", 
+    borderRadius: "10px", 
+    border: "2px solid #e2e8f0", 
+    backgroundColor: "#fff", 
+    color: "#475569", 
+    cursor: "pointer", 
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  pageBtnDisabled: { 
+    padding: "10px 20px", 
+    borderRadius: "10px", 
+    border: "2px solid #f1f5f9", 
+    backgroundColor: "#f8fafc", 
+    color: "#cbd5e1", 
+    cursor: "not-allowed",
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    fontFamily: "inherit",
+  },
+  pageNumbers: {
+    display: "flex",
+    gap: "6px",
+  },
+  pageNum: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "10px",
+    border: "2px solid #e2e8f0",
+    backgroundColor: "#fff",
+    color: "#475569",
+    cursor: "pointer",
+    fontWeight: 600,
+    fontSize: "0.9rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    transition: "all 0.2s ease",
+    fontFamily: "inherit",
+  },
+  pageNumActive: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "10px",
+    border: "2px solid #3b82f6",
+    backgroundColor: "#3b82f6",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: 700,
+    fontSize: "0.9rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: "inherit",
+  },
 };
