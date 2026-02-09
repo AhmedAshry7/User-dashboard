@@ -6,23 +6,24 @@ exports.noActiveUsers = async (req, res) => {
 };
 
 exports.getActiveUsers = async (req, res) => {
-  const { source } = req.query;
   try {
-    const data = await statsService.getActiveUsers(source);
-    res.json(data);
+    const filters = req.body.filters || {};
+    const users = await statsService.getActiveUsers(filters);
+    res.json(users);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch users" }); // Return JSON, not HTML!
+    res.status(500).json({ error: "failed" });
   }
 };
 
-exports.getSources = async (req, res) => {
-  const data = await statsService.getSources();
+
+exports.getFilters = async (req, res) => {
+  const data = await statsService.getFilters();
   res.json(data);
 };
 
-exports.updateActiveUsers = async (req, res) => {
+/* exports.updateActiveUsers = async (req, res) => {
   const { source } = req.query;
   const data = await statsService.updateActiveUsers(source);
   res.json(data);
-};
+}; */

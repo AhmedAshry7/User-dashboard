@@ -11,4 +11,7 @@ app.use(express.json());
 
 app.use("/stats", statsRoutes);
 
+const authRoutes = require("./routes/authRoutes");
+app.use("/auth", authRoutes);
+
 module.exports = app;

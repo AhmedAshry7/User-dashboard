@@ -1,27 +1,41 @@
 import { API_BASE } from "@/lib/api";
 
-export async function fetchNoActiveUsers() {
-  const res = await fetch(`${API_BASE}/stats/noActiveUsers`);
-  return res.json();
+function authHeader() {
+  const token = localStorage.getItem("token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 }
 
-export async function fetchSources() {
-  const res = await fetch(`${API_BASE}/stats/sources`);
-  return res.json();
-}
-
-export async function fetchActiveUsers(source?: string) {
-  const url = source
-    ? `${API_BASE}/stats/activeUsers?source=${source}`
-    : `${API_BASE}/stats/activeUsers`;
-
-  const res = await fetch(url);
+export const fetchActiveUsers = async (filters?: any) => {
+  const res = await fetch(`${API_BASE}/stats/activeUsers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeader(),
+    },
+    body: JSON.stringify({ filters }),
+  });
   if (!res.ok) {
     // This prevents the "Unexpected token <" error
     throw new Error(`Server responded with ${res.status}`);
   }
+  return res.json();
+};
 
-  return await res.json(); 
+
+export async function fetchNoActiveUsers() {
+  const res = await fetch(`${API_BASE}/stats/noActiveUsers`, {
+    headers: authHeader(),
+  });
+  return res.json();
+}
+
+export async function fetchFilters() {
+  const res = await fetch(`${API_BASE}/stats/filters`, {
+    headers: authHeader(),
+  });
+  return res.json();
 }
 
 export async function updateActiveUsers(source?: string) {
@@ -29,6 +43,6 @@ export async function updateActiveUsers(source?: string) {
     ? `${API_BASE}/stats/activeUsers?source=${source}`
     : `${API_BASE}/stats/activeUsers`;
 
-  const res = await fetch(url, { method: "PUT" });
+  const res = await fetch(url, { method: "PUT", headers: authHeader() });
   return res.json();
 }
