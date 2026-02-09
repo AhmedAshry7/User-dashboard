@@ -8,6 +8,7 @@ function authHeader() {
 }
 
 export const fetchActiveUsers = async (filters?: any) => {
+  console.log("Fetching active users with filters:", filters);
   const res = await fetch(`${API_BASE}/stats/activeUsers`, {
     method: "POST",
     headers: {
@@ -35,6 +36,10 @@ export async function fetchFilters() {
   const res = await fetch(`${API_BASE}/stats/filters`, {
     headers: authHeader(),
   });
+  if (!res.ok) {
+    // This prevents the "Unexpected token <" error
+    throw new Error(`Server responded with ${res.status}`);
+  }
   return res.json();
 }
 

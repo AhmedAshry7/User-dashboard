@@ -7,12 +7,22 @@ exports.noActiveUsers = async (req, res) => {
 
 exports.getActiveUsers = async (req, res) => {
   try {
+    // Extract filters from the request body
     const filters = req.body.filters || {};
+
+    // For debugging: verify exactly what the frontend is sending
+    console.log("Received Filter Payload:", JSON.stringify(filters, null, 2));
+
     const users = await statsService.getActiveUsers(filters);
+
+    // Send the results back to the frontend
     res.json(users);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "failed" });
+    // Log the full error to the console for easier troubleshooting
+    console.error("Controller Error in getActiveUsers:", err);
+    
+    // Send a consistent error response
+    res.status(500).json({ error: "Failed to fetch active users" });
   }
 };
 

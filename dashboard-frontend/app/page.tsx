@@ -15,7 +15,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<any>(null);
   const [filters, setFilters] = useState<Record<string, any[]>>({});
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [activeColumn, setActiveColumn] = useState<string | null>(null);
+  const [activeColumn, setActiveColumn] = useState<string | null>("wallet_usd_value");  // default active column in filter modal
   const [selectedFilters, setSelectedFilters] =useState<Record<string, any[]>>({});
   const [users, setUsers] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -36,6 +36,7 @@ export default function Dashboard() {
           fetchNoActiveUsers(),
           fetchFilters(),
         ]);
+        console.log("filtersData", filtersData);
         setStats(statsData);
         setFilters(filtersData);
         await loadUsers("ALL");
@@ -70,6 +71,256 @@ export default function Dashboard() {
     setPage(1);
     setIsLoading(false);
   };
+
+// Improved range builder that handles edge cases properly
+const buildRanges = (min: any, max: any, columnName: string) => {
+  // Handle null/undefined/NaN cases
+  const minIsValid = min != null && !isNaN(Number(min));
+  const maxIsValid = max != null && !isNaN(Number(max));
+  
+  // If both are invalid, return empty array (we'll show "No data" message)
+  if (!minIsValid && !maxIsValid) {
+    return [];
+  }
+  
+  // Convert to numbers
+  const minNum = Number(min);
+  const maxNum = Number(max);
+  
+  // If min equals max, return single value
+  if (minNum === maxNum) {
+    return [{
+      min: minNum,
+      max: maxNum,
+      label: formatValue(minNum, columnName)
+    }];
+  }
+  
+  // Check if this is a date column
+  const isDateColumn = columnName.includes('_at');
+  
+  if (isDateColumn) {
+    return buildDateRanges(minNum, maxNum);
+  }
+  // RIGHT: Pass the raw strings directly from the API response
+  if (columnName === "wallet_usd_value") {
+    return buildNumericRanges(filters.wallet_usd_value_min, filters.wallet_usd_value_max);
+  }
+  return buildNumericRanges(minNum, maxNum);
+};
+
+const buildDateRanges = (min: number, max: number) => {
+  const ranges = [];
+  const minDate = new Date(min);
+  const maxDate = new Date(max);
+  
+  // Calculate difference in days
+  const diffDays = (maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24);
+  
+  let numBuckets = 10;
+  if (diffDays < 30) numBuckets = 5;
+  else if (diffDays < 365) numBuckets = 12;
+  else numBuckets = 20;
+  
+  const step = (max - min) / numBuckets;
+  
+  for (let i = 0; i < numBuckets; i++) {
+    const rangeMin = min + (step * i);
+    const rangeMax = i === numBuckets - 1 ? max : min + (step * (i + 1));
+    
+    ranges.push({
+      min: rangeMin,
+      max: rangeMax,
+      label: `${formatDate(rangeMin)} — ${formatDate(rangeMax)}`
+    });
+  }
+  
+  return ranges;
+};
+
+const buildNumericRanges = (min: any, max: any) => {
+  // Capture the raw string IMMEDIATELY before any Number() conversion
+  const rawMax = String(max); 
+
+  const minNum = Number(min);
+  const maxNum = Number(max);
+  const range = maxNum - minNum;
+
+  // Use Logarithmic if the scale is massive
+  if (maxNum > 1000 && (maxNum / Math.max(minNum, 1)) > 100) {
+      // Pass the RAW STRING to the next function
+      return buildLogarithmicRanges(minNum, maxNum, rawMax);
+  }
+
+  // ... rest of your linear logic ...
+  // Ensure the linear logic also uses toFullString for the output
+  const ranges = [];
+  let numBuckets = 10;
+  const step = range / numBuckets;
+
+  for (let i = 0; i < numBuckets; i++) {
+    const rMin = minNum + (step * i);
+    const rMax = i === numBuckets - 1 ? max : minNum + (step * (i + 1));
+    
+    ranges.push({
+      min: toFullString(rMin),
+      max: toFullString(rMax),
+      label: `${formatNumber(rMin)} — ${formatNumber(Number(rMax))}`
+    });
+  }
+  return ranges;
+};
+
+const toFullString = (val: any) => {
+  if (val == null) return "0";
+  
+  const str = String(val);
+
+  // If the string is already a long string of digits (no 'e'), leave it!
+  if (!str.includes('e') && !str.includes('.')) {
+    return str;
+  }
+
+  // If it is scientific notation or a float, use BigInt carefully
+  try {
+    const num = Number(val);
+    if (Math.abs(num) < 1.0) return num.toFixed(20).replace(/\.?0+$/, "");
+    return BigInt(Math.floor(num)).toString();
+  } catch {
+    return str;
+  }
+};
+
+const buildLogarithmicRanges = (min: number, max: number, rawMaxStr: string) => {
+  const ranges = [];
+  let currentMin = min;
+  let currentStep = min <= 0 ? 100 : Math.pow(10, Math.floor(Math.log10(min)));
+
+  while (currentMin < max) {
+    let nextMax = currentStep * 10;
+    
+    // If we've reached the end, don't do math. 
+    // Use the exact string '866000000000000000000000'
+    if (nextMax >= max || ranges.length >= 14) {
+      ranges.push({
+        min: toFullString(currentMin),
+        max: rawMaxStr, // <--- THIS IS THE FIX
+        label: `${formatNumber(currentMin)} — ${formatNumber(max)}`
+      });
+      break;
+    }
+
+    ranges.push({
+      min: toFullString(currentMin),
+      max: toFullString(nextMax),
+      label: `${formatNumber(currentMin)} — ${formatNumber(nextMax)}`
+    });
+
+    currentMin = nextMax;
+    currentStep = nextMax;
+  }
+  return ranges;
+};
+
+// Format numbers properly without excessive decimals
+const formatNumber = (num: number) => {
+  if (num == null || isNaN(num)) return 'N/A';
+  if (num === 0) return '0';
+
+  const absNum = Math.abs(num);
+
+  // Added handling for Quadrillion (e15), Quintillion (e18), Sextillion (e21)
+  if (absNum >= 1e21) return (num / 1e21).toFixed(1) + 'S'; // Sextillion
+  if (absNum >= 1e18) return (num / 1e18).toFixed(1) + 'Qn'; // Quintillion
+  if (absNum >= 1e15) return (num / 1e15).toFixed(1) + 'Q';  // Quadrillion
+  if (absNum >= 1e12) return (num / 1e12).toFixed(1) + 'T';  // Trillion
+  if (absNum >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+  if (absNum >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+  if (absNum >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+
+  if (absNum < 1 && absNum > 0) return num.toFixed(4); // More precision for tiny decimals
+  
+  return Number.isInteger(num) ? num.toString() : parseFloat(num.toFixed(2)).toString();
+};
+
+// Format dates to readable format
+const formatDate = (timestamp: number) => {
+  if (!timestamp || isNaN(timestamp)) return 'N/A';
+  
+  const date = new Date(timestamp);
+  
+  // Check if date is valid
+  if (isNaN(date.getTime())) return 'N/A';
+  
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+};
+
+// Format value based on column type
+const formatValue = (val: any, columnName: string) => {
+  if (val == null) return 'N/A';
+  
+  const num = Number(val);
+  if (isNaN(num)) return 'N/A';
+  
+  if (columnName.includes('_at')) {
+    return formatDate(num);
+  }
+  
+  return formatNumber(num);
+};
+
+const normalizeFilters = (filters: any) => {
+  const out: any = {};
+
+  Object.entries(filters).forEach(([k, v]: any) => {
+    // If it's a range and it's an array with at least one selection
+    if (k.endsWith("_range") && Array.isArray(v) && v.length > 0) {
+      out[k] = v; 
+    } 
+    // If it's a standard categorical filter (array of strings)
+    else if (Array.isArray(v) && v.length > 0) {
+      out[k] = v;
+    }
+  });
+
+  return out;
+};
+
+const exportCSV = () => {
+  if (!users.length) return;
+
+  const headers = Object.keys(users[0]);
+
+  const csvRows = [
+    headers.join(","), // header row
+    ...users.map(row =>
+      headers.map(h => `"${row[h] ?? ""}"`).join(",")
+    )
+  ];
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "filtered_users.csv";
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+};
+
+const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
+  if (key.endsWith("_min")) {
+    acc.push(key.replace("_min", ""));
+  } else if (!key.endsWith("_max")) {
+    acc.push(key);
+  }
+  return acc;
+}, []);
 
 
 /*   const handleMessageClick = async (source: string) => {
@@ -117,8 +368,23 @@ export default function Dashboard() {
             <option key={i} value={s.source}>{s.source}</option>
           ))}
         </select> */}
+        <button
+          onClick={exportCSV}
+          style={{
+            padding: "8px 20px",
+            borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#22c55e",
+            color: "#fff",
+            cursor: "pointer",
+            fontWeight: 600,
+            marginLeft: 10
+          }}
+        >
+          Export
+        </button>
       <button 
-        style={{ ...styles.pageBtn, marginLeft: "auto" }} 
+        style={styles.pageBtn} 
         onClick={() => setShowFilterModal(true)}
       >
         Filter
@@ -235,50 +501,146 @@ export default function Dashboard() {
             <div style={styles.modal}>
               <div style={styles.modalHeader}>
                 <h1 style={{ marginLeft: 10, fontSize: 20, fontWeight: 700 }}>Filters</h1>
-                <button style={styles.pageBtn3} onClick={() => setShowFilterModal(false)}><img src={x.src} alt="Close" width="16" height="16" /></button>
+                <button style={styles.pageBtn3} onClick={() => setShowFilterModal(false)}><img src={x.src} alt="Close" width="12" height="12" /></button>
               </div>
               <div style={styles.columns}>
-              {/* LEFT: columns */}
-              <div style={styles.modalLeft}>
-                {Object.keys(filters).map((col) => (
-                  <div
-                    key={col}
-                    style={{
-                      padding: 10,
-                      cursor: "pointer",
-                      background: activeColumn === col ? "#e0f2fe" : "transparent"
-                    }}
-                    onClick={() => setActiveColumn(col)}
-                  >
-                    {col}
-                  </div>
-                ))}
-              </div>
-
-              {/* RIGHT: values */}
-              <div style={styles.modalRight}>
-                {activeColumn &&
-                  filters[activeColumn]?.map((val: any) => (
-                    <label key={val} style={{ display: "block" }}>
-                      <input
-                        type="checkbox"
-                        checked={!!selectedFilters[activeColumn]?.includes(val)}
-                        onChange={(e) => {
-                          const prev = selectedFilters?.[activeColumn] || [];
-                          const updated = e.target.checked
-                            ? [...prev, val]
-                            : prev.filter((v: any) => v !== val);
-
-                          setSelectedFilters({
-                            ...selectedFilters,
-                            [activeColumn]: updated,
-                          });
-                        }}
-                      />
-                      {String(val)}
-                    </label>
+                {/* LEFT: columns */}
+                <div style={styles.modalLeft}>
+                  {filterColumns.map((col) => (
+                    <div
+                      key={col}
+                      style={{
+                        padding: 10,
+                        cursor: "pointer",
+                        background: activeColumn === col ? "#e0f2fe" : "transparent"
+                      }}
+                      onClick={() => setActiveColumn(col)}
+                    >
+                      {col}
+                    </div>
                   ))}
-              </div>
+                </div>
+
+                {/* RIGHT: values */}
+                <div style={styles.modalRight}>
+
+                  {activeColumn && (() => {
+                    const minKey = `${activeColumn}_min`;
+                    const maxKey = `${activeColumn}_max`;
+
+                    /* RANGE COLUMN */
+                    if (filters[minKey] !== undefined && filters[maxKey] !== undefined) {
+                      const minVal = Array.isArray(filters[minKey]) ? filters[minKey][0] : filters[minKey];
+                      const maxVal = Array.isArray(filters[maxKey]) ? filters[maxKey][0] : filters[maxKey];
+                      
+                      const ranges = buildRanges(minVal, maxVal, activeColumn);
+                      
+                      // If no valid ranges, show message
+                      if (ranges.length === 0) {
+                        return (
+                          <div style={{ padding: 20, color: '#666', textAlign: 'center' }}>
+                            No data available
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                          {ranges.map((r, i) => {
+                            const selected = selectedFilters?.[`${activeColumn}_range`] || [];
+
+                            return (
+                              <label 
+                                key={i} 
+                                style={{ 
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: "10px 16px",
+                                  cursor: "pointer",
+                                  borderBottom: "1px solid #f0f0f0"
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  style={{ marginRight: 10, cursor: "pointer" }}
+                                  checked={selected.some((x: any) => x.min === r.min && x.max === r.max)}
+                                  onChange={(e) => {
+                                    const prev = selectedFilters?.[`${activeColumn}_range`] || [];
+
+                                    const updated = e.target.checked
+                                      ? [...prev, { min: r.min, max: r.max }]
+                                      : prev.filter((x: any) => !(x.min === r.min && x.max === r.max));
+
+                                    setSelectedFilters({
+                                      ...selectedFilters,
+                                      [`${activeColumn}_range`]: updated,
+                                    });
+                                  }}
+                                />
+                                <span>{r.label}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    /* NORMAL DISTINCT VALUES */
+                    const values = filters[activeColumn];
+                    
+                    // Filter out null/undefined/NaN and get unique values
+                    const uniqueValues = values 
+                      ? Array.from(new Set(values.filter((val: any) => {
+                          if (val == null) return false;
+                          if (typeof val === 'number' && isNaN(val)) return false;
+                          return true;
+                        })))
+                      : [];
+                    
+                    if (uniqueValues.length === 0) {
+                      return (
+                        <div style={{ padding: 20, color: '#666', textAlign: 'center' }}>
+                          No data available
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                        {uniqueValues.map((val: any) => (
+                          <label 
+                            key={String(val)} 
+                            style={{ 
+                              display: "flex",
+                              alignItems: "center",
+                              padding: "10px 16px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #f0f0f0"
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              style={{ marginRight: 10, cursor: "pointer" }}
+                              checked={!!selectedFilters[activeColumn]?.includes(val)}
+                              onChange={(e) => {
+                                const prev = selectedFilters?.[activeColumn] || [];
+                                const updated = e.target.checked
+                                  ? [...prev, val]
+                                  : prev.filter((v: any) => v !== val);
+
+                                setSelectedFilters({
+                                  ...selectedFilters,
+                                  [activeColumn]: updated,
+                                });
+                              }}
+                            />
+                            <span>{String(val)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    );
+                  })()}
+          </div>
               </div>
               {/* footer */}
               <div style={styles.modalFooter}>
@@ -293,7 +655,7 @@ export default function Dashboard() {
                 <button
                   style={styles.pageBtn}
                   onClick={() => {
-                    loadUsersWithFilters(selectedFilters);
+                    loadUsersWithFilters(normalizeFilters(selectedFilters));
                     setShowFilterModal(false);
                   }}
                 >
@@ -360,6 +722,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: "25px",
     display: "flex",
     alignItems: "center",
+  justifyContent: "flex-end",
     gap: "12px",
   },
   label: { fontWeight: 600, color: "#475569" },
