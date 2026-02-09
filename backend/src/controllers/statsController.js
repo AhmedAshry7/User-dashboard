@@ -10,9 +10,6 @@ exports.getActiveUsers = async (req, res) => {
     // Extract filters from the request body
     const filters = req.body.filters || {};
 
-    // For debugging: verify exactly what the frontend is sending
-    console.log("Received Filter Payload:", JSON.stringify(filters, null, 2));
-
     const users = await statsService.getActiveUsers(filters);
 
     // Send the results back to the frontend
