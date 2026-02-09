@@ -509,6 +509,7 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                   {filterColumns.map((col) => (
                     <div
                       key={col}
+                      className="filter-column-item"
                       style={{
                         padding: 10,
                         cursor: "pointer",
@@ -545,7 +546,7 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                       }
 
                       return (
-                        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                        <div style={{ maxHeight: 400 }}>
                           {ranges.map((r, i) => {
                             const selected = selectedFilters?.[`${activeColumn}_range`] || [];
 
@@ -606,7 +607,7 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
                     }
                     
                     return (
-                      <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+                      <div style={{ maxHeight: 400}}>
                         {uniqueValues.map((val: any) => (
                           <label 
                             key={String(val)} 
@@ -668,7 +669,6 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
 
       </main>
 
-      {/* Inline Spinner CSS */}
       <style jsx>{`
         .spinner {
           border: 4px solid #f3f3f3;
@@ -683,15 +683,25 @@ const filterColumns = Object.keys(filters).reduce((acc: string[], key) => {
           100% { transform: rotate(360deg); }
         }
       `}</style>
+      <style>{`
+      button:hover {
+        filter: brightness(0.7);
+        transition: filter 0.2s;
+      }
+
+      .filter-column-item:hover {
+        background-color: #f0f9ff !important; 
+      }
+    `}</style>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    maxWidth: "1200px",
+    maxWidth: "100%",
     margin: "0 auto",
-    padding: "40px 20px",
+    padding: "50px",
     fontFamily: "'Inter', system-ui, sans-serif",
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
@@ -804,7 +814,7 @@ const styles: Record<string, React.CSSProperties> = {
   pagination: { padding: "20px", display: "flex", justifyContent: "center", alignItems: "center", gap: "20px", borderTop: "1px solid #f1f5f9" },
   pageBtn: { padding: "8px 20px", borderRadius: "8px", border: "none", backgroundColor: "#3b82f6", color: "#fff", cursor: "pointer", fontWeight: 500 },
   pageBtn2: { padding: "8px 20px", marginLeft: "10px", borderRadius: "8px", border: "none", backgroundColor: "#94a3b8", color: "#fff", cursor: "pointer", fontWeight: 500 },
-  pageBtn3: { padding: "8px 8px", cursor: "pointer" },
+  pageBtn3: { padding: "8px 8px", cursor: "pointer",backgroundColor: "#fff", border: "none", borderRadius: "50%" },
   pageBtnDisabled: { padding: "8px 20px", borderRadius: "8px", border: "none", backgroundColor: "#e2e8f0", color: "#94a3b8", cursor: "not-allowed" },
   pageInfo: { fontWeight: 500, color: "#64748b" },
 };

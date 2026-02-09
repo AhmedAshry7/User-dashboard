@@ -53,7 +53,7 @@ export default function LoginPage() {
           background: "white",
           padding: 30,
           borderRadius: 12,
-          width: 320,
+          width: 500,
           boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
         }}>
         <h2 style={{ textAlign: "center", color: "#1e40af" }}>Dashboard Login</h2>
@@ -62,7 +62,7 @@ export default function LoginPage() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          style={{ width: "100%", padding: 10, marginTop: 20 }}
+          style={{ width: "100%", padding: 10, marginTop: 20, borderRadius: 8, border: "1px solid #cbd5e1" }}
         />
 
         <div style={{ position: "relative", marginTop: 15 }}>
@@ -71,7 +71,7 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: 10 }}
+            style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #cbd5e1" }}
           />
 
           <span
@@ -108,6 +108,12 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+      <style jsx>{`
+      button:hover {
+        filter: brightness(0.7);
+        transition: filter 0.2s;
+      }
+    `}</style>
     </div>
     );
 }
