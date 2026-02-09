@@ -143,23 +143,68 @@ export default function Dashboard() {
               <table style={styles.table}>
                 <thead>
                   <tr style={styles.tableHeaderRow}>
+                    
                     <th style={styles.th}>Address</th>
+                    <th style={styles.th}>Web3 ID</th>
+                    <th style={styles.th}>Wallet USD Value</th>
+                    <th style={styles.th}>TVF</th>
+                    <th style={styles.th}>Replied Rate</th>
+                    <th style={styles.th}>Follower Count</th>
+                    <th style={styles.th}>Following Count</th>
+                    <th style={styles.th}>Twitter ID</th>
+                    <th style={styles.th}>Twitter Verified</th>
+                    <th style={styles.th}>Telegram ID</th>
+                    <th style={styles.th}>Discord ID</th>
+                    <th style={styles.th}>Is VIP</th>
+                    <th style={styles.th}>Rank At</th>
+                    <th style={styles.th}>Rank Score</th>
+                    <th style={styles.th}>Offer Price</th>
+                    <th style={styles.th}>Initial Price</th>
+                    <th style={styles.th}>Trust Count</th>
+                    <th style={styles.th}>Reward</th>
+                    <th style={styles.th}>Active VIP Days</th>
+                    <th style={styles.th}>Uncharged Offer Count</th>
+                    <th style={styles.th}>Uncharged Offer Value</th>
+                    <th style={styles.th}>Unread Message Count</th>
                     <th style={styles.th}>Source</th>
-                    <th style={styles.th}>Wallet USD</th>
                     <th style={styles.th}>Contacted</th>
+                    <th style={styles.th}>Contacted At</th>
+                    <th style={styles.th}>Created At</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentRows.map((u, i) => (
                     <tr key={i} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
                       <td style={styles.tdAddress}>{u.address}</td>
-                      <td style={styles.td}>{u.source}</td>
+                      <td style={styles.td}>{u.web3_id}</td>
                       <td style={styles.td}>${parseFloat(u.wallet_usd_value).toLocaleString()}</td>
+                      <td style={styles.td}>{u.tvf}</td>
+                      <td style={styles.td}>{u.replied_rate}%</td>
+                      <td style={styles.td}>{u.follower_count}</td>
+                      <td style={styles.td}>{u.following_count}</td>
+                      <td style={styles.td}>{u.twitter_id}</td>
+                      <td style={styles.td}>{u.twitter_verified ? "Yes" : "No"}</td>
+                      <td style={styles.td}>{u.telegram_id}</td>
+                      <td style={styles.td}>{u.discord_id}</td>
+                      <td style={styles.td}>{u.is_vip ? "Yes" : "No"}</td>
+                      <td style={styles.td}>{new Date(u.rank_at).toLocaleDateString()}</td>
+                      <td style={styles.td}>{u.rank_score}</td>
+                      <td style={styles.td}>${parseFloat(u.offer_price).toLocaleString()}</td>
+                      <td style={styles.td}>${parseFloat(u.initial_price).toLocaleString()}</td>
+                      <td style={styles.td}>{u.trust_count}</td>
+                      <td style={styles.td}>${parseFloat(u.reward).toLocaleString()}</td>
+                      <td style={styles.td}>{u.active_vip_days}</td>
+                      <td style={styles.td}>{u.uncharged_offer_count}</td>
+                      <td style={styles.td}>${parseFloat(u.uncharged_offer_value).toLocaleString()}</td>
+                      <td style={styles.td}>{u.unread_message_count}</td>
+                      <td style={styles.td}>{u.source}</td>
                       <td style={styles.td}>
                         <span style={u.contacted ? styles.tagYes : styles.tagNo}>
                           {u.contacted ? "Yes" : "No"}
                         </span>
                       </td>
+                      <td style={styles.td}>{u.contacted_at ? new Date(u.contacted_at).toLocaleDateString() : "N/A"}</td>
+                      <td style={styles.td}>{new Date(u.created_at).toLocaleDateString()}</td>
                     </tr>
                   ))}
                 </tbody>

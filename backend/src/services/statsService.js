@@ -43,6 +43,7 @@ exports.getActiveUsers = async (filters = {}) => {
 exports.getFilters = async () => {
   const result = await pool.query(`
     SELECT
+      array_agg(DISTINCT wallet_usd_value) AS wallet_usd_value,
       array_agg(DISTINCT tvf) AS tvf,
       array_agg(DISTINCT replied_rate) AS replied_rate,
       array_agg(DISTINCT follower_count) AS follower_count,
