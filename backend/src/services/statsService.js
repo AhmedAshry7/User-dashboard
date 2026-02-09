@@ -5,7 +5,7 @@ exports.noActiveUsers = async () => {
   const result = await pool.query(`
       SELECT 
         COUNT(*) FILTER (
-          WHERE replied_rate > 0 OR following_count > 0
+          WHERE active=true
         ) AS active_rows,
         COUNT(*) AS total_rows
       FROM addresses
@@ -19,7 +19,7 @@ exports.getActiveUsers = async (filters = {}) => {
   let query = `
     SELECT *
     FROM addresses
-    WHERE (replied_rate > 0 OR following_count > 0)
+    WHERE active=true
   `;
 
   const values = [];
@@ -72,12 +72,13 @@ exports.getActiveUsers = async (filters = {}) => {
 exports.getFilters = async () => {
   const result = await pool.query(`
     SELECT
-      /* numeric ranges */
       MIN(wallet_usd_value)::text AS wallet_usd_value_min,
       MAX(wallet_usd_value)::text AS wallet_usd_value_max,
 
       MIN(replied_rate) AS replied_rate_min,
       MAX(replied_rate) AS replied_rate_max,
+
+      array_remove(array_agg(DISTINCT twitter_verified), NULL) AS twitter_verified,
 
       MIN(follower_count) AS follower_count_min,
       MAX(follower_count) AS follower_count_max,
@@ -85,9 +86,14 @@ exports.getFilters = async () => {
       MIN(following_count) AS following_count_min,
       MAX(following_count) AS following_count_max,
 
+      array_remove(array_agg(DISTINCT source), NULL) AS source,
+
+      array_remove(array_agg(DISTINCT tvf), NULL) AS tvf,
 
       MIN(rank_score) AS rank_score_min,
       MAX(rank_score) AS rank_score_max,
+
+      array_remove(array_agg(DISTINCT contacted), NULL) AS contacted,
 
       MIN(offer_price) AS offer_price_min,
       MAX(offer_price) AS offer_price_max,
@@ -101,6 +107,8 @@ exports.getFilters = async () => {
       MIN(reward) AS reward_min,
       MAX(reward) AS reward_max,
 
+      array_remove(array_agg(DISTINCT is_vip), NULL) AS is_vip,
+
       MIN(active_vip_days) AS active_vip_days_min,
       MAX(active_vip_days) AS active_vip_days_max,
 
@@ -112,21 +120,17 @@ exports.getFilters = async () => {
 
       MIN(unread_message_count) AS unread_message_count_min,
       MAX(unread_message_count) AS unread_message_count_max,
+      
 
       EXTRACT(EPOCH FROM (MIN(contacted_at)::timestamp)) * 1000 AS contacted_at_min,
       EXTRACT(EPOCH FROM (MAX(contacted_at)::timestamp)) * 1000 AS contacted_at_max,
 
       EXTRACT(EPOCH FROM (MIN(created_at)::timestamp)) * 1000 AS created_at_min,
-      EXTRACT(EPOCH FROM (MAX(created_at)::timestamp)) * 1000 AS created_at_max,
+      EXTRACT(EPOCH FROM (MAX(created_at)::timestamp)) * 1000 AS created_at_max
+
       
-      /* small cardinality columns - filter nulls */
-      array_remove(array_agg(DISTINCT tvf), NULL) AS tvf,
-      array_remove(array_agg(DISTINCT twitter_verified), NULL) AS twitter_verified,
-      array_remove(array_agg(DISTINCT is_vip), NULL) AS is_vip,
-      array_remove(array_agg(DISTINCT source), NULL) AS source,
-      array_remove(array_agg(DISTINCT contacted), NULL) AS contacted
     FROM addresses
-    WHERE (replied_rate > 0 OR following_count > 0)
+    WHERE active=true
   `);
 
   return result.rows[0];
